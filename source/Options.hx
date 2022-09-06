@@ -45,9 +45,13 @@ class Option
 	{
 		display = updateDisplay();
 	}
+
 	private var description:String = "";
 	private var display:String;
 	private var acceptValues:Bool = false;
+
+	public var allowFastChange:Bool = true;
+
 	public final function getDisplay():String
 	{
 		return display;
@@ -63,13 +67,31 @@ class Option
 		return description;
 	}
 
-	public function getValue():String { return throw "stub!"; };
-	
+	public function getValue():String
+	{
+		return throw "stub!";
+	};
+
 	// Returns whether the label is to be updated.
-	public function press():Bool { return throw "stub!"; }
-	private function updateDisplay():String { return throw "stub!"; }
-	public function left():Bool { return throw "stub!"; }
-	public function right():Bool { return throw "stub!"; }
+	public function press():Bool
+	{
+		return throw "stub!";
+	}
+
+	private function updateDisplay():String
+	{
+		return throw "stub!";
+	}
+
+	public function left():Bool
+	{
+		return throw "stub!";
+	}
+
+	public function right():Bool
+	{
+		return throw "stub!";
+	}
 }
 
 
@@ -93,6 +115,69 @@ class DFJKOption extends Option
 	private override function updateDisplay():String
 	{
 		return "Key Bindings";
+	}
+}
+
+class IconBounce extends Option
+{
+	public function new(desc:String)
+	{
+		super();
+		allowFastChange = false;
+		description = desc;
+		acceptValues = true;
+	}
+
+	public override function press():Bool
+	{
+		return false;
+	}
+
+	override function left():Bool
+	{
+		if (FlxG.save.data.ib == 0)
+			return false;
+
+		FlxG.save.data.ib -= 1;
+		trace(FlxG.save.data.ib);
+
+		return true;
+	}
+
+	override function getValue():String
+	{
+		return "(NEW) Icon Bounce: " + intToMode(FlxG.save.data.ib);
+	}
+
+	private override function updateDisplay():String
+	{
+		return "(NEW) Icon Bounce " + intToMode(FlxG.save.data.ib);
+	}
+
+	function intToMode(i:Int):String
+	{
+		var mode:String = 'Default';
+		switch (i)
+		{
+			case 0:
+				mode = 'Default';
+			case 1:
+				mode = 'GA';
+			case 2:
+				mode = 'DNB';
+		}
+		return mode;
+	}
+
+	override function right():Bool
+	{
+		if (FlxG.save.data.ib == 2)
+			return false;
+
+		FlxG.save.data.ib += 1;
+		trace(FlxG.save.data.ib);
+
+		return true;
 	}
 }
 
@@ -782,6 +867,26 @@ class CamZoomOption extends Option
 	}
 }
 
+class CamMovementOption extends Option
+{
+	public function new(desc:String)
+	{
+		super();
+		description = desc;
+	}
+	public override function press():Bool
+	{
+		FlxG.save.data.cameraMovement = !FlxG.save.data.cameraMovement;
+		display = updateDisplay();
+		return true;
+	}
+	
+	private override function updateDisplay():String
+	{
+		return "(NEW) Camera Movement " + (!FlxG.save.data.cameraMovement ? "off" : "on");
+	}
+}
+
 class LockWeeksOption extends Option
 {
 	var confirm:Bool = false;
@@ -893,6 +998,7 @@ class ResetSettings extends Option
 		FlxG.save.data.strumline = null;
 		FlxG.save.data.customStrumLine = null;
 		FlxG.save.data.camzoom = null;
+		FlxG.save.data.cameraMovement = null;
 		FlxG.save.data.stepMania = null;
 		KadeEngineData.initSave();
 		confirm = false;

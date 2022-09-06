@@ -70,6 +70,11 @@ class OptionsMenu extends MusicBeatState
 			new ResetScoreOption("Reset your score on all songs and weeks. This is irreversible!"),
 			new LockWeeksOption("Reset your story mode progress. This is irreversible!"),
 			new ResetSettings("Reset ALL your settings. This is irreversible!")
+		]),
+
+		new OptionCategory("New Options", [
+			new CamMovementOption("Toggle Making Camera Move On Note Hit"),
+			new IconBounce("Change Your Icon Bounce")
 		])
 		
 	];
@@ -269,6 +274,78 @@ class OptionsMenu extends MusicBeatState
 		}
 		FlxG.save.flush();
 	}
+
+	function catOption()
+		{
+			if (FlxG.keys.pressed.SHIFT || !currentSelectedCat.getOptions()[curSelected].allowFastChange)
+			{
+				if (FlxG.keys.justPressed.RIGHT)
+					currentSelectedCat.getOptions()[curSelected].right();
+				FlxG.save.flush();
+				if (FlxG.keys.justPressed.LEFT)
+					currentSelectedCat.getOptions()[curSelected].left();
+				FlxG.save.flush();
+			}
+			else
+			{
+				if (FlxG.keys.pressed.RIGHT || FlxG.keys.pressed.D)
+					currentSelectedCat.getOptions()[curSelected].right();
+				else if (FlxG.keys.pressed.LEFT || FlxG.keys.pressed.A)
+					currentSelectedCat.getOptions()[curSelected].left();
+			}
+	
+			var gamepad:FlxGamepad = FlxG.gamepads.lastActive;
+	
+			if (gamepad != null)
+			{
+				if (gamepad.justPressed.DPAD_RIGHT)
+				{
+					currentSelectedCat.getOptions()[curSelected].right();
+				}
+				if (gamepad.justPressed.DPAD_LEFT)
+				{
+					currentSelectedCat.getOptions()[curSelected].left();
+				}
+			}
+	
+			versionShit.text = currentSelectedCat.getOptions()[curSelected].getValue();
+			if (currentDescription != '')
+			{
+				versionShit.text += " - Description - " + currentDescription;
+			}
+		}
+
+		function offsetChange()
+			{
+				if (FlxG.keys.pressed.SHIFT)
+				{
+					if (FlxG.keys.justPressed.RIGHT || FlxG.keys.justPressed.D)
+						FlxG.save.data.offset += 0.1;
+					else if (FlxG.keys.justPressed.LEFT || FlxG.keys.justPressed.A)
+						FlxG.save.data.offset -= 0.1;
+				}
+				else if (FlxG.keys.pressed.RIGHT || FlxG.keys.pressed.D)
+					FlxG.save.data.offset += 0.1;
+				else if (FlxG.keys.pressed.LEFT || FlxG.keys.pressed.A)
+					FlxG.save.data.offset -= 0.1;
+		
+				var gamepad:FlxGamepad = FlxG.gamepads.lastActive;
+		
+				if (gamepad != null)
+				{
+					if (gamepad.justPressed.DPAD_RIGHT)
+					{
+						FlxG.save.data.offset += 0.1;
+					}
+					if (gamepad.justPressed.DPAD_LEFT)
+					{
+						FlxG.save.data.offset -= 0.1;
+					}
+				}
+		
+				versionShit.text = "Offset (Left, Right, Shift for slow): " + HelperFunctions.truncateFloat(FlxG.save.data.offset, 2) + " - Description - "
+					+ currentDescription;
+			}
 
 	var isSettingControl:Bool = false;
 
