@@ -49,6 +49,9 @@ class KadeEngineData
 		if(FlxG.save.data.cameraMovement == null)
 			FlxG.save.data.cameraMovement = true;
 
+		if(FlxG.save.data.hitsound == null)
+			FlxG.save.data.hitsound = false;
+
 		if (FlxG.save.data.fpsCap == null)
 			FlxG.save.data.fpsCap = 120;
 
@@ -66,6 +69,9 @@ class KadeEngineData
 
 		if (FlxG.save.data.ib == null)
 			FlxG.save.data.ib = 0;
+
+		if (FlxG.save.data.ns == null)
+			FlxG.save.data.ns = 0;
 
 		if (FlxG.save.data.accuracyMod == null)
 			FlxG.save.data.accuracyMod = 1;
@@ -90,6 +96,9 @@ class KadeEngineData
 		
 		if (FlxG.save.data.botplay == null)
 			FlxG.save.data.botplay = false;
+
+		if (FlxG.save.data.healthDisplay == null)
+			FlxG.save.data.healthDisplay = false;
 
 		if (FlxG.save.data.cpuStrums == null)
 			FlxG.save.data.cpuStrums = false;

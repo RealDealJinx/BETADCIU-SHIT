@@ -74,7 +74,10 @@ class OptionsMenu extends MusicBeatState
 
 		new OptionCategory("New Options", [
 			new CamMovementOption("Toggle Making Camera Move On Note Hit"),
-			new IconBounce("Change Your Icon Bounce")
+			new IconBounce("Change Your Icon Bounce"),
+			new HitsoundOption("Toggle On Note Hit Will Play A Hit Sound"),
+			new NoteSplashOption("Change Your Note Skin"),
+			new HealthDisplay("Toggle Showing A Health Display")
 		])
 		
 	];

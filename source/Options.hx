@@ -146,12 +146,12 @@ class IconBounce extends Option
 
 	override function getValue():String
 	{
-		return "(NEW) Icon Bounce: " + intToMode(FlxG.save.data.ib);
+		return "!NEW! Icon Bounce: " + intToMode(FlxG.save.data.ib);
 	}
 
 	private override function updateDisplay():String
 	{
-		return "(NEW) Icon Bounce " + intToMode(FlxG.save.data.ib);
+		return "!NEW! Icon Bounce " + intToMode(FlxG.save.data.ib);
 	}
 
 	function intToMode(i:Int):String
@@ -164,7 +164,7 @@ class IconBounce extends Option
 			case 1:
 				mode = 'GA';
 			case 2:
-				mode = 'DNB';
+				mode = 'Weird Shit';
 		}
 		return mode;
 	}
@@ -178,6 +178,90 @@ class IconBounce extends Option
 		trace(FlxG.save.data.ib);
 
 		return true;
+	}
+}
+
+class NoteSplashOption extends Option
+{
+	public function new(desc:String)
+	{
+		super();
+		allowFastChange = false;
+		description = desc;
+		acceptValues = true;
+	}
+
+	public override function press():Bool
+	{
+		return false;
+	}
+
+	override function left():Bool
+	{
+		if (FlxG.save.data.ns == 0)
+			return false;
+
+		FlxG.save.data.ns -= 1;
+		trace(FlxG.save.data.ns);
+
+		return true;
+	}
+
+	override function getValue():String
+	{
+		return "Note Splash: " + intToMode(FlxG.save.data.ns);
+	}
+
+	private override function updateDisplay():String
+	{
+		return "Note Splash " + intToMode(FlxG.save.data.ns);
+	}
+
+	function intToMode(i:Int):String
+	{
+		var mode:String = 'Week 7';
+		switch (i)
+		{
+			case 0:
+				mode = 'Week 7';
+			case 1:
+				mode = 'Psych';
+			case 2:
+				mode = 'Off';
+		}
+		return mode;
+	}
+
+	override function right():Bool
+	{
+		if (FlxG.save.data.ns == 2)
+			return false;
+
+		FlxG.save.data.ns += 1;
+		trace(FlxG.save.data.ns);
+
+		return true;
+	}
+}
+
+class HealthDisplay extends Option
+{
+	public  function new(desc:String){
+		super();
+		description = desc;
+	}
+
+	public override function press():Bool
+	{
+		FlxG.save.data.healthDisplay = !FlxG.save.data.healthDisplay;
+			
+		display = updateDisplay();
+		return true;
+	}
+	
+	private override function updateDisplay():String
+	{
+		return  FlxG.save.data.healthDisplay ? "Show Health Display" : "Hide Health Display";
 	}
 }
 
@@ -366,6 +450,26 @@ class ResetButtonOption extends Option
 	private override function updateDisplay():String
 	{
 		return "Reset Button " + (!FlxG.save.data.resetButton ? "off" : "on");
+	}
+}
+
+class HitsoundOption extends Option
+{
+	public function new(desc:String)
+	{
+		super();
+		description = desc;
+	}
+	public override function press():Bool
+	{
+		FlxG.save.data.hitsound = !FlxG.save.data.hitsound;
+		display = updateDisplay();
+		return true;
+	}
+
+	private override function updateDisplay():String
+	{
+		return "Enable HitSound " + (!FlxG.save.data.hitsound ? "off" : "on");
 	}
 }
 
@@ -999,6 +1103,10 @@ class ResetSettings extends Option
 		FlxG.save.data.customStrumLine = null;
 		FlxG.save.data.camzoom = null;
 		FlxG.save.data.cameraMovement = null;
+		FlxG.save.data.ib = null;
+		FlxG.save.data.hitsound = null;
+		FlxG.save.data.ns = null;
+		FlxG.save.data.healthDisplay = null;
 		FlxG.save.data.stepMania = null;
 		KadeEngineData.initSave();
 		confirm = false;

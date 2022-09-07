@@ -253,6 +253,105 @@ class ModchartState
 					PlayState.instance.iconP1.animation.play(id);
 	}
 
+		//does this work. right? -- future me here. yes it does.
+		function changeStage(id:String)
+			{	
+				PlayState.instance.removeObject(PlayState.gf);
+				PlayState.instance.removeObject(PlayState.dad);
+				PlayState.instance.removeObject(PlayState.boyfriend);
+		
+				for (i in PlayState.Stage.toAdd)
+				{
+					PlayState.instance.removeObject(i);
+					PlayState.instance.destroyObject(i);
+				}	
+		
+				for (i in PlayState.Stage.layInFront[0])
+				{
+					PlayState.instance.removeObject(i);
+					PlayState.instance.destroyObject(i);
+				}	
+		
+				for (i in PlayState.Stage.layInFront[1])
+				{
+					PlayState.instance.removeObject(i);
+					PlayState.instance.destroyObject(i);
+				}	
+		
+				for (i in PlayState.Stage.layInFront[2])
+				{
+					PlayState.instance.removeObject(i);
+					PlayState.instance.destroyObject(i);
+				}	
+				
+				PlayState.instance.removeObject(PlayState.Stage);
+				PlayState.instance.destroyObject(PlayState.Stage);
+				
+				PlayState.Stage = new Stage(id);
+				PlayState.curStage = PlayState.Stage.curStage;
+				PlayState.defaultCamZoom = PlayState.Stage.camZoom;
+				for (i in PlayState.Stage.toAdd)
+				{
+					PlayState.instance.addObject(i);
+				}	
+				
+				for (index => array in PlayState.Stage.layInFront)
+				{
+					switch (index)
+					{
+						case 0:
+							PlayState.instance.addObject(PlayState.gf);
+							PlayState.gf.scrollFactor.set(0.95, 0.95);
+							for (bg in array)
+								PlayState.instance.addObject(bg);
+						case 1:
+		
+							PlayState.instance.addObject(PlayState.dad);
+							for (bg in array)
+								PlayState.instance.addObject(bg);
+						case 2:
+							PlayState.instance.addObject(PlayState.boyfriend);
+							for (bg in array)
+								PlayState.instance.addObject(bg);
+					}
+				}	
+			}
+
+		// this is better. easier to port shit from playstate. THX Blantos <3
+		function changeGFCharacterBetter(x:Float, y:Float, id:String, ?xFactor:Float = 0.95, ?yFactor:Float = 0.95)
+		{		
+			PlayState.instance.removeObject(PlayState.gf);
+			//PlayState.gf = new Character(x, y, null);
+			PlayState.instance.destroyObject(PlayState.gf);
+			PlayState.gf = new Character(x, y, id);
+			PlayState.gf.scrollFactor.set(xFactor, yFactor);
+			PlayState.instance.addObject(PlayState.gf);
+		}
+		
+		function changeDadCharacterBetter(x:Float, y:Float, id:String)
+		{		
+			PlayState.instance.removeObject(PlayState.dad);
+			//PlayState.dad = new Character(x, y, null);
+			PlayState.instance.destroyObject(PlayState.dad);
+			PlayState.dad = new Character(x, y, id);
+			PlayState.instance.addObject(PlayState.dad);
+			PlayState.instance.iconP2.animation.play(id);
+			PlayState.healthBar.createFilledBar(FlxColor.fromString('#' + PlayState.dad.iconColor), FlxColor.fromString('#' + PlayState.boyfriend.iconColor));
+			PlayState.healthBar.updateBar();	
+		}
+		
+		function changeBoyfriendCharacterBetter(x:Float, y:Float, id:String)
+		{							
+			PlayState.instance.removeObject(PlayState.boyfriend);
+			//PlayState.boyfriend = new Boyfriend(x, y, null);
+			PlayState.instance.destroyObject(PlayState.boyfriend);
+			PlayState.boyfriend = new Boyfriend(x, y, id);
+			PlayState.instance.addObject(PlayState.boyfriend);
+			PlayState.instance.iconP1.animation.play(id);
+			PlayState.healthBar.createFilledBar(FlxColor.fromString('#' + PlayState.dad.iconColor), FlxColor.fromString('#' + PlayState.boyfriend.iconColor));
+			PlayState.healthBar.updateBar();	
+		}
+
 	function makeAnimatedLuaSprite(spritePath:String,names:Array<String>,prefixes:Array<String>,startAnim:String, id:String)
 	{
 		#if sys
@@ -420,6 +519,14 @@ class ModchartState
 				// sprites
 	
 				Lua_helper.add_callback(lua,"makeSprite", makeLuaSprite);
+
+				Lua_helper.add_callback(lua,"changeStage", changeStage);
+
+				Lua_helper.add_callback(lua,"changeDadCharacterBetter", changeDadCharacterBetter);
+
+				Lua_helper.add_callback(lua,"changeBoyfriendCharacterBetter", changeBoyfriendCharacterBetter);
+
+				Lua_helper.add_callback(lua,"changeGFCharacterBetter", changeGFCharacterBetter);
 				
 				Lua_helper.add_callback(lua,"changeDadCharacter", changeDadCharacter);
 

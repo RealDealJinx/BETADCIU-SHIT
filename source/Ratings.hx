@@ -137,15 +137,18 @@ class Ratings
         return rating;
     }
 
-    public static function CalculateRanking(score:Int,scoreDef:Int,nps:Int,maxNPS:Int,accuracy:Float):String
+    public static function CalculateRanking(score:Int,scoreDef:Int,nps:Int,maxNPS:Int,accuracy:Float,health:Float):String
     {
         return
+        //(FlxG.save.data.healthDisplay ?
+         //"Health Display:" + Math.round(PlayState.health * 50) + "%" + (!PlayStateChangeables.botPlay || PlayState.loadRep ? " | " : "") + 
          (FlxG.save.data.npsDisplay ?																							// NPS Toggle
          "NPS: " + nps + " (Max " + maxNPS + ")" + (!PlayStateChangeables.botPlay || PlayState.loadRep ? " | " : "") : "") +								// 	NPS
          (!PlayStateChangeables.botPlay || PlayState.loadRep ? "Score:" + (Conductor.safeFrames != 10 ? score + " (" + scoreDef + ")" : "" + score) + 		// Score
          (FlxG.save.data.accuracyDisplay ?																						// Accuracy Toggle
-         " | Combo Breaks:" + PlayState.misses + 																				// 	Misses/Combo Breaks
+        " | Combo Breaks:" + PlayState.misses + 
+        " | Health Display:" + Math.round(health * 50) + "% " + 																				// 	Misses/Combo Breaks
          " | Accuracy:" + (PlayStateChangeables.botPlay && !PlayState.loadRep ? "N/A" : HelperFunctions.truncateFloat(accuracy, 2) + " %") +  				// 	Accuracy
-         " | " + GenerateLetterRank(accuracy) : "") : ""); 																		// 	Letter Rank
+         " | " + GenerateLetterRank(accuracy) : "") : "");											// 	Letter Rank
     }
 }
