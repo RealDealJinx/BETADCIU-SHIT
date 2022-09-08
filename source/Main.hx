@@ -1,7 +1,9 @@
 package;
 
+import flixel.graphics.FlxGraphic;
+import openfl.display.Bitmap;
 import lime.app.Application;
-#if windows
+#if FEATURE_DISCORD
 import Discord.DiscordClient;
 #end
 import openfl.display.BlendMode;
@@ -15,6 +17,17 @@ import openfl.Lib;
 import openfl.display.FPS;
 import openfl.display.Sprite;
 import openfl.events.Event;
+import openfl.utils.Assets as OpenFlAssets;
+#if !html5
+//crash handler stuff
+import lime.app.Application;
+import openfl.events.UncaughtErrorEvent;
+import haxe.CallStack;
+import haxe.io.Path;
+import sys.FileSystem;
+import sys.io.File;
+import sys.io.Process;
+#end
 
 class Main extends Sprite
 {
@@ -26,20 +39,25 @@ class Main extends Sprite
 	var skipSplash:Bool = true; // Whether to skip the flixel splash screen that appears in release mode.
 	var startFullscreen:Bool = false; // Whether to start the game in fullscreen on desktop targets
 
+	public static var bitmapFPS:Bitmap;
+
+	public static var instance:Main;
+
 	public static var watermarks = true; // Whether to put Kade Engine literally anywhere
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
 
 	public static function main():Void
 	{
-
-		// quick checks 
+		// quick checks
 
 		Lib.current.addChild(new Main());
 	}
 
 	public function new()
 	{
+		instance = this;
+
 		super();
 
 		if (stage != null)
@@ -51,8 +69,6 @@ class Main extends Sprite
 			addEventListener(Event.ADDED_TO_STAGE, init);
 		}
 	}
-
-	public static var webmHandler:WebmHandler;
 
 	private function init(?E:Event):Void
 	{
@@ -78,35 +94,75 @@ class Main extends Sprite
 			gameHeight = Math.ceil(stageHeight / zoom);
 		}
 
-		#if cpp
-		initialState = Caching;
-		game = new FlxGame(gameWidth, gameHeight, initialState, zoom, framerate, framerate, skipSplash, startFullscreen);
-		#else
-		game = new FlxGame(gameWidth, gameHeight, initialState, zoom, framerate, framerate, skipSplash, startFullscreen);
+		#if !cpp
+		framerate = 60;
 		#end
-		addChild(game);
-		#if windows
-		DiscordClient.initialize();
 
-		Application.current.onExit.add (function (exitCode) {
+		// Run this first so we can see logs.
+		Debug.onInitProgram();
+
+		// Gotta run this before any assets get loaded.
+		#if FEATURE_MODCORE
+		ModCore.initialize();
+		#end
+
+		#if FEATURE_DISCORD
+		Discord.DiscordClient.initialize();
+		Application.current.onExit.add(function(exitCode)
+		{
 			DiscordClient.shutdown();
-		 });
-		 
+		});
 		#end
 
 		#if !mobile
-		fpsCounter = new FPS(10, 3, 0xFFFFFF);
+		fpsCounter = new KadeEngineFPS(10, 3, 0xFFFFFF);
+		bitmapFPS = ImageOutline.renderImage(fpsCounter, 1, 0x000000, true);
+		bitmapFPS.smoothing = true;
+		#end
+
+		game = new FlxGame(gameWidth, gameHeight, initialState, zoom, framerate, framerate, skipSplash, startFullscreen);
+		addChild(game);
+
+		#if !mobile
 		addChild(fpsCounter);
 		toggleFPS(FlxG.save.data.fps);
+		#end
+
+		// Finish up loading debug tools.
+		Debug.onGameStart();
+		
+		#if !html5
+		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, onCrash);
 		#end
 	}
 
 	var game:FlxGame;
 
-	var fpsCounter:FPS;
+	var fpsCounter:KadeEngineFPS;
 
-	public function toggleFPS(fpsEnabled:Bool):Void {
-		fpsCounter.visible = fpsEnabled;
+	public static function dumpCache()
+	{
+		///* SPECIAL THANKS TO HAYA
+		#if PRELOAD_ALL
+		@:privateAccess
+		for (key in FlxG.bitmap._cache.keys())
+		{
+			var obj = FlxG.bitmap._cache.get(key);
+			if (obj != null)
+			{
+				Assets.cache.removeBitmapData(key);
+				FlxG.bitmap._cache.remove(key);
+				obj.destroy();
+			}
+		}
+		Assets.cache.clear("songs");
+		Assets.cache.clear("images");
+		#end
+		// */
+	}
+
+	public function toggleFPS(fpsEnabled:Bool):Void
+	{
 	}
 
 	public function changeFPSColor(color:FlxColor)
@@ -119,7 +175,7 @@ class Main extends Sprite
 		openfl.Lib.current.stage.frameRate = cap;
 	}
 
-	public function getFPSCap():Float
+	public static function getFPSCap():Float
 	{
 		return openfl.Lib.current.stage.frameRate;
 	}
@@ -128,4 +184,56 @@ class Main extends Sprite
 	{
 		return fpsCounter.currentFPS;
 	}
+
+	// lov u tails
+	// https://github.com/nebulazorua/tails-gets-trolled-v3/blob/master/source/Main.hx
+	public static function adjustFPS(num:Float):Float
+	{
+		return num * (60 / (cast(Lib.current.getChildAt(0), Main)).getFPS());
+	}
+	
+	// Code was entirely made by sqirra-rng for their fnf engine named "Izzy Engine", big props to them!!!
+	// very cool person for real they don't get enough credit for their work
+	#if !html5 //because of how it show up on desktop
+	function onCrash(e:UncaughtErrorEvent):Void
+	{
+		if (FlxG.fullscreen)
+			FlxG.fullscreen = !FlxG.fullscreen;
+		
+		var errMsg:String = "";
+		var path:String;
+		var callStack:Array<StackItem> = CallStack.exceptionStack(true);
+		var dateNow:String = Date.now().toString();
+
+		dateNow = StringTools.replace(dateNow, " ", "_");
+		dateNow = StringTools.replace(dateNow, ":", "'");
+
+		path = "./crash/" + "KadeEngine_" + dateNow + ".txt";
+
+		for (stackItem in callStack)
+		{
+			switch (stackItem)
+			{
+				case FilePos(s, file, line, column):
+					errMsg += file + " (line " + line + ")\n";
+				default:
+					Sys.println(stackItem);
+			}
+		}
+
+		errMsg += "\nUncaught Error: " + e.error + "\nPlease report this error to My Github page: https://github.com/BoloVEVO/Kade-Engine-Public\n\n> Crash Handler written by: sqirra-rng";
+
+		if (!FileSystem.exists("./crash/"))
+			FileSystem.createDirectory("./crash/");
+
+		File.saveContent(path, errMsg + "\n");
+
+		Sys.println(errMsg);
+		Sys.println("Crash dump saved in " + Path.normalize(path));
+
+		Application.current.window.alert(errMsg, "Error!");
+		DiscordClient.shutdown();
+		Sys.exit(1);
+	}
+	#end
 }

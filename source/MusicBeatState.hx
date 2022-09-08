@@ -1,13 +1,19 @@
 package;
 
-#if windows
+import Conductor.BPMChangeEvent;
+import flixel.FlxBasic;
+import flixel.FlxG;
+import flixel.FlxState;
+import flixel.addons.transition.FlxTransitionableState;
+import lime.app.Application;
+import openfl.Lib;
+import flixel.addons.ui.FlxUI;
+import flixel.FlxSprite;
+import flixel.group.FlxGroup.FlxTypedGroup;
+import flixel.addons.ui.FlxUIState;
+#if FEATURE_DISCORD
 import Discord.DiscordClient;
 #end
-import flixel.util.FlxColor;
-import openfl.Lib;
-import Conductor.BPMChangeEvent;
-import flixel.FlxG;
-import flixel.addons.ui.FlxUIState;
 
 class MusicBeatState extends FlxUIState
 {
@@ -17,59 +23,156 @@ class MusicBeatState extends FlxUIState
 	private var curStep:Int = 0;
 	private var curBeat:Int = 0;
 	private var curDecimalBeat:Float = 0;
+
+	public static var switchingState:Bool = false;
+
 	private var controls(get, never):Controls;
 
 	inline function get_controls():Controls
 		return PlayerSettings.player1.controls;
 
+	public static var initSave:Bool = false;
+
+	private var assets:Array<FlxBasic> = [];
+
+	override function destroy()
+	{
+		clean();
+
+		Application.current.window.onFocusIn.remove(onWindowFocusOut);
+		Application.current.window.onFocusIn.remove(onWindowFocusIn);
+
+		super.destroy();
+	}
+
+	public function destroyObject(Object:Dynamic):Void
+	{
+		if (Std.isOfType(Object, FlxSprite))
+		{
+			var spr:FlxSprite = cast(Object, FlxSprite);
+			spr.kill();
+			remove(spr, true);
+			spr.destroy();
+			spr = null;
+		}
+		else if (Std.isOfType(Object, FlxTypedGroup))
+		{
+			var grp:FlxTypedGroup<Dynamic> = cast(Object, FlxTypedGroup<Dynamic>);
+			for (ObjectGroup in grp.members)
+			{
+				if (Std.isOfType(ObjectGroup, FlxSprite))
+				{
+					var spr:FlxSprite = cast(ObjectGroup, FlxSprite);
+					spr.kill();
+					remove(spr, true);
+					spr.destroy();
+					spr = null;
+				}
+			}
+		}
+	}
+
+	override function add(Object:FlxBasic):FlxBasic
+	{
+		if (Std.isOfType(Object, FlxUI))
+			return null;
+
+		if (Std.isOfType(Object, FlxSprite))
+			var spr:FlxSprite = cast(Object, FlxSprite);
+
+		// Debug.logTrace(Object);
+		#if FEATURE_MULTITHREADING
+		if (!FlxG.save.data.optimize)
+			MasterObjectLoader.addObject(Object);
+		#else
+		if (!FlxG.save.data.optimize)
+			assets.push(Object);
+		#end
+		var result = super.add(Object);
+		return result;
+	}
+
+	override function remove(Object:FlxBasic, Splice:Bool = false):FlxBasic
+	{
+		#if FEATURE_MULTITHREADING
+		MasterObjectLoader.removeObject(Object);
+		#end
+		var result = super.remove(Object, Splice);
+		return result;
+	}
+
+	public function clean()
+	{
+		#if FEATURE_MULTITHREADING
+		for (i in MasterObjectLoader.Objects)
+		{
+			destroyObject(i);
+		}
+		#else
+		for (i in assets)
+		{
+			remove(i);
+		}
+		#end
+	}
+
 	override function create()
 	{
+		if (initSave)
+		{
+			if (FlxG.save.data.laneTransparency < 0)
+				FlxG.save.data.laneTransparency = 0;
+
+			if (FlxG.save.data.laneTransparency > 1)
+				FlxG.save.data.laneTransparency = 1;
+		}
+
+		Application.current.window.onFocusIn.add(onWindowFocusIn);
+		Application.current.window.onFocusOut.add(onWindowFocusOut);
 		TimingStruct.clearTimings();
-		(cast (Lib.current.getChildAt(0), Main)).setFPSCap(FlxG.save.data.fpsCap);
+
+		KeyBinds.keyCheck();
 
 		if (transIn != null)
 			trace('reg ' + transIn.region);
 
+		var skip:Bool = FlxTransitionableState.skipNextTransOut;
+
 		super.create();
+
+		if (!skip)
+		{
+			openSubState(new PsychTransition(0.85, true));
+		}
+		FlxTransitionableState.skipNextTransOut = false;
+
+		Paths.clearUnusedMemory();
 	}
-
-
-	var array:Array<FlxColor> = [
-		FlxColor.fromRGB(148, 0, 211),
-		FlxColor.fromRGB(75, 0, 130),
-		FlxColor.fromRGB(0, 0, 255),
-		FlxColor.fromRGB(0, 255, 0),
-		FlxColor.fromRGB(255, 255, 0),
-		FlxColor.fromRGB(255, 127, 0),
-		FlxColor.fromRGB(255, 0 , 0)
-	];
-
-	var skippedFrames = 0;
 
 	override function update(elapsed:Float)
 	{
-		//everyStep();
-		var nextStep:Int = updateCurStep();
+		// everyStep();
+		/*var nextStep:Int = updateCurStep();
 
-		if (nextStep >= 0)
-		{
-			if (nextStep > curStep)
+			if (nextStep >= 0)
 			{
-				for (i in curStep...nextStep)
+				if (nextStep > curStep)
 				{
-					curStep++;
+					for (i in curStep...nextStep)
+					{
+						curStep++;
+						updateBeat();
+						stepHit();
+					}
+				}
+				else if (nextStep < curStep)
+				{
+					//Song reset?
+					curStep = nextStep;
 					updateBeat();
 					stepHit();
 				}
-			}
-			else if (nextStep < curStep)
-			{
-				//Song reset?
-				curStep = nextStep;
-				updateBeat();
-				stepHit();
-			}
-		}
+		}*/
 
 		if (Conductor.songPosition < 0)
 			curDecimalBeat = 0;
@@ -81,34 +184,101 @@ class MusicBeatState extends FlxUIState
 
 				FlxG.watch.addQuick("Current Conductor Timing Seg", data.bpm);
 
-				Conductor.crochet = ((60 / data.bpm) * 1000);
+				Conductor.crochet = ((60 / data.bpm) * 1000) / PlayState.songMultiplier;
 
-				var percent = (Conductor.songPosition - (data.startTime * 1000)) / (data.length * 1000);
+				var step = ((60 / data.bpm) * 1000) / 4;
+				var startInMS = (data.startTime * 1000);
 
-				curDecimalBeat = data.startBeat + (((Conductor.songPosition/1000) - data.startTime) * (data.bpm / 60));
+				curDecimalBeat = data.startBeat + ((((Conductor.songPosition / 1000)) - data.startTime) * (data.bpm / 60));
+				var ste:Int = Math.floor(data.startStep + ((Conductor.songPosition) - startInMS) / step);
+				if (ste >= 0)
+				{
+					if (ste > curStep)
+					{
+						for (i in curStep...ste)
+						{
+							curStep++;
+							updateBeat();
+							stepHit();
+						}
+					}
+					else if (ste < curStep)
+					{
+						trace("reset steps for some reason?? at " + Conductor.songPosition);
+						// Song reset?
+						curStep = ste;
+						updateBeat();
+						stepHit();
+					}
+				}
 			}
 			else
 			{
-				curDecimalBeat = (Conductor.songPosition / 1000) * (Conductor.bpm/60);
-				Conductor.crochet = ((60 / Conductor.bpm) * 1000);
+				curDecimalBeat = (((Conductor.songPosition / 1000))) * (Conductor.bpm / 60);
+				var nextStep:Int = Math.floor((Conductor.songPosition) / Conductor.stepCrochet);
+				if (nextStep >= 0)
+				{
+					if (nextStep > curStep)
+					{
+						for (i in curStep...nextStep)
+						{
+							curStep++;
+							updateBeat();
+							stepHit();
+						}
+					}
+					else if (nextStep < curStep)
+					{
+						// Song reset?
+						trace("(no bpm change) reset steps for some reason?? at " + Conductor.songPosition);
+						curStep = nextStep;
+						updateBeat();
+						stepHit();
+					}
+				}
+				Conductor.crochet = ((60 / Conductor.bpm) * 1000) / PlayState.songMultiplier;
 			}
 		}
 
-		if (FlxG.save.data.fpsRain && skippedFrames >= 6)
+		super.update(elapsed);
+	}
+
+	// ALL CREDITS TO SHADOWMARIO
+	public static function switchState(nextState:FlxState)
+	{
+		MusicBeatState.switchingState = true;
+		var curState:Dynamic = FlxG.state;
+		var leState:MusicBeatState = curState;
+		if (!FlxTransitionableState.skipNextTransIn)
+		{
+			leState.openSubState(new PsychTransition(0.75, false));
+			if (nextState == FlxG.state)
 			{
-				if (currentColor >= array.length)
-					currentColor = 0;
-				(cast (Lib.current.getChildAt(0), Main)).changeFPSColor(array[currentColor]);
-				currentColor++;
-				skippedFrames = 0;
+				PsychTransition.finishCallback = function()
+				{
+					MusicBeatState.switchingState = false;
+					FlxG.resetState();
+				};
+				// trace('resetted');
 			}
 			else
-				skippedFrames++;
+			{
+				PsychTransition.finishCallback = function()
+				{
+					MusicBeatState.switchingState = false;
+					FlxG.switchState(nextState);
+				};
+				// trace('changed state');
+			}
+			return;
+		}
+		FlxTransitionableState.skipNextTransIn = false;
+		FlxG.switchState(nextState);
+	}
 
-		if ((cast (Lib.current.getChildAt(0), Main)).getFPSCap != FlxG.save.data.fpsCap && FlxG.save.data.fpsCap <= 290)
-			(cast (Lib.current.getChildAt(0), Main)).setFPSCap(FlxG.save.data.fpsCap);
-
-		super.update(elapsed);
+	public static function resetState()
+	{
+		MusicBeatState.switchState(FlxG.state);
 	}
 
 	private function updateBeat():Void
@@ -116,8 +286,6 @@ class MusicBeatState extends FlxUIState
 		lastBeat = curBeat;
 		curBeat = Math.floor(curStep / 4);
 	}
-
-	public static var currentColor = 0;
 
 	private function updateCurStep():Int
 	{
@@ -143,9 +311,9 @@ class MusicBeatState extends FlxUIState
 
 	public function beatHit():Void
 	{
-		//do literally nothing dumbass
+		// do literally nothing dumbass
 	}
-	
+
 	public function fancyOpenURL(schmancy:String)
 	{
 		#if linux
@@ -153,5 +321,37 @@ class MusicBeatState extends FlxUIState
 		#else
 		FlxG.openURL(schmancy);
 		#end
+	}
+
+	function onWindowFocusOut():Void
+	{
+		if (PlayState.inDaPlay)
+		{
+			if (PlayState.instance.vocals != null)
+				PlayState.instance.vocals.pause();
+			if (FlxG.sound.music != null)
+				FlxG.sound.music.pause();
+			if (!PlayState.instance.paused && !PlayState.instance.endingSong && PlayState.instance.songStarted)
+			{
+				Debug.logTrace("Lost Focus");
+				PlayState.instance.openSubState(new PauseSubState());
+				PlayState.boyfriend.stunned = true;
+
+				PlayState.instance.persistentUpdate = false;
+				PlayState.instance.persistentDraw = true;
+				PlayState.instance.paused = true;
+			}
+		}
+	}
+
+	function onWindowFocusIn():Void
+	{
+		Debug.logTrace("IM BACK!!!");
+		(cast(Lib.current.getChildAt(0), Main)).setFPSCap(FlxG.save.data.fpsCap);
+		if (PlayState.inDaPlay)
+		{
+			if (PlayState.boyfriend.stunned)
+				PlayState.boyfriend.stunned = false;
+		}
 	}
 }

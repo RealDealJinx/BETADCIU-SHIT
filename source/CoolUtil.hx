@@ -1,16 +1,8 @@
 package;
 
-import flixel.FlxG;
-import openfl.utils.Assets;
-import lime.utils.Assets as LimeAssets;
-import lime.utils.AssetLibrary;
-import lime.utils.AssetManifest;
-import flixel.system.FlxSound;
-#if sys
+import openfl.utils.Assets as OpenFlAssets;
+#if FEATURE_FILESYSTEM
 import sys.io.File;
-import sys.FileSystem;
-#else
-import openfl.utils.Assets;
 #end
 
 using StringTools;
@@ -19,6 +11,10 @@ class CoolUtil
 {
 	public static var difficultyArray:Array<String> = ['Easy', "Normal", "Hard"];
 
+	public static var suffixDiffsArray:Array<String> = ['-easy', "", "-hard"];
+
+	public static var daPixelZoom:Float = 6;
+
 	public static function difficultyFromInt(difficulty:Int):String
 	{
 		return difficultyArray[difficulty];
@@ -26,7 +22,49 @@ class CoolUtil
 
 	public static function coolTextFile(path:String):Array<String>
 	{
-		var daList:Array<String> = Assets.getText(path).trim().split('\n');
+		var daList:Array<String>;
+
+		try
+		{
+			daList = OpenFlAssets.getText(path).trim().split('\n');
+		}
+		catch (e)
+		{
+			daList = null;
+		}
+
+		if (daList != null)
+			for (i in 0...daList.length)
+			{
+				daList[i] = daList[i].trim();
+			}
+
+		return daList;
+	}
+
+	inline public static function boundTo(value:Float, min:Float, max:Float):Float
+	{
+		return Math.max(min, Math.min(max, value));
+	}
+
+	public static function dashToSpace(string:String):String
+	{
+		return string.replace("-", " ");
+	}
+
+	public static function spaceToDash(string:String):String
+	{
+		return string.replace(" ", "-");
+	}
+
+	public static function swapSpaceDash(string:String):String
+	{
+		return StringTools.contains(string, '-') ? dashToSpace(string) : spaceToDash(string);
+	}
+
+	public static function coolStringFile(path:String):Array<String>
+	{
+		var daList:Array<String> = path.trim().split('\n');
 
 		for (i in 0...daList.length)
 		{
@@ -35,18 +73,6 @@ class CoolUtil
 
 		return daList;
 	}
-	
-	public static function coolStringFile(path:String):Array<String>
-		{
-			var daList:Array<String> = path.trim().split('\n');
-	
-			for (i in 0...daList.length)
-			{
-				daList[i] = daList[i].trim();
-			}
-	
-			return daList;
-		}
 
 	public static function numberArray(max:Int, ?min = 0):Array<Int>
 	{
@@ -56,9 +82,5 @@ class CoolUtil
 			dumbArray.push(i);
 		}
 		return dumbArray;
-	}
-
-	inline public static function boundTo(value:Float, min:Float, max:Float):Float {
-		return Math.max(min, Math.min(max, value));
 	}
 }

@@ -1,5 +1,9 @@
 package;
 
+import lime.app.Application;
+import openfl.Lib;
+import flixel.text.FlxText;
+import flixel.input.gamepad.FlxGamepad;
 import Conductor.BPMChangeEvent;
 import flixel.FlxG;
 import flixel.FlxSubState;
@@ -9,6 +13,24 @@ class MusicBeatSubstate extends FlxSubState
 	public function new()
 	{
 		super();
+	}
+
+	override function destroy()
+	{
+		#if desktop
+		Application.current.window.onFocusIn.remove(onWindowFocusOut);
+		Application.current.window.onFocusIn.remove(onWindowFocusIn);
+		#end
+		super.destroy();
+	}
+
+	override function create()
+	{
+		super.create();
+		#if desktop
+		Application.current.window.onFocusIn.add(onWindowFocusIn);
+		Application.current.window.onFocusOut.add(onWindowFocusOut);
+		#end
 	}
 
 	private var lastBeat:Float = 0;
@@ -23,7 +45,7 @@ class MusicBeatSubstate extends FlxSubState
 
 	override function update(elapsed:Float)
 	{
-		//everyStep();
+		// everyStep();
 		var nextStep = updateCurStep();
 
 		if (nextStep >= 0)
@@ -39,12 +61,18 @@ class MusicBeatSubstate extends FlxSubState
 			}
 			else if (nextStep < curStep)
 			{
-				//Song reset?
+				// Song reset?
 				curStep = nextStep;
 				updateBeat();
 				stepHit();
 			}
 		}
+
+		var gamepad:FlxGamepad = FlxG.gamepads.lastActive;
+		if (gamepad != null)
+			KeyBinds.gamepad = true;
+		else
+			KeyBinds.gamepad = false;
 
 		super.update(elapsed);
 	}
@@ -79,6 +107,36 @@ class MusicBeatSubstate extends FlxSubState
 
 	public function beatHit():Void
 	{
-		//do literally nothing dumbass
+		// do literally nothing dumbass
+	}
+
+	function onWindowFocusOut():Void
+	{
+		if (PlayState.inDaPlay)
+		{
+			PlayState.instance.vocals.pause();
+			FlxG.sound.music.pause();
+			if (!PlayState.instance.paused && !PlayState.instance.endingSong && PlayState.instance.songStarted)
+			{
+				Debug.logTrace("Lost Focus");
+				PlayState.instance.openSubState(new PauseSubState());
+				PlayState.boyfriend.stunned = true;
+
+				PlayState.instance.persistentUpdate = false;
+				PlayState.instance.persistentDraw = true;
+				PlayState.instance.paused = true;
+			}
+		}
+	}
+
+	function onWindowFocusIn():Void
+	{
+		Debug.logTrace("IM BACK!!!");
+		(cast(Lib.current.getChildAt(0), Main)).setFPSCap(FlxG.save.data.fpsCap);
+		if (PlayState.inDaPlay)
+		{
+			if (PlayState.boyfriend.stunned)
+				PlayState.boyfriend.stunned = false;
+		}
 	}
 }

@@ -30,11 +30,12 @@ class MenuCharacter extends FlxSprite
 		'pico' => new CharacterSetting(0, 0, 1.0, true),
 		'mom' => new CharacterSetting(-30, 140, 0.85),
 		'parents-christmas' => new CharacterSetting(100, 130, 1.8),
-		'senpai' => new CharacterSetting(-40, -45, 1.4)
+		'senpai' => new CharacterSetting(-40, -45, 1.4),
+		'tankman' => new CharacterSetting(-100, -35, 1.0)
 	];
 
 	private var flipped:Bool = false;
-	//questionable variable name lmfao
+	// questionable variable name lmfao
 	private var goesLeftNRight:Bool = false;
 	private var danceLeft:Bool = false;
 	private var character:String = '';
@@ -44,10 +45,7 @@ class MenuCharacter extends FlxSprite
 		super(x, y);
 		this.flipped = flipped;
 
-		if(FlxG.save.data.antialiasing)
-			{
-				antialiasing = true;
-			}
+		antialiasing = FlxG.save.data.antialiasing;
 
 		frames = Paths.getSparrowAtlas('campaign_menu_UI_characters');
 
@@ -62,6 +60,7 @@ class MenuCharacter extends FlxSprite
 		animation.addByPrefix('mom', "Mom Idle BLACK LINES", 24, false);
 		animation.addByPrefix('parents-christmas', "Parent Christmas Idle", 24, false);
 		animation.addByPrefix('senpai', "SENPAI idle Black Lines", 24, false);
+		animation.addByPrefix('tankman', "Tankman Menu BLACK", 24, false);
 
 		setGraphicSize(Std.int(width * scale));
 		updateHitbox();
@@ -81,7 +80,8 @@ class MenuCharacter extends FlxSprite
 			visible = true;
 		}
 
-		if (!sameCharacter) {
+		if (!sameCharacter)
+		{
 			bopHead(true);
 		}
 
@@ -93,20 +93,29 @@ class MenuCharacter extends FlxSprite
 
 	public function bopHead(LastFrame:Bool = false):Void
 	{
-		if (character == 'gf' || character == 'spooky') {
+		if (character == 'gf' || character == 'spooky')
+		{
 			danceLeft = !danceLeft;
 
 			if (danceLeft)
 				animation.play(character + "-left", true);
 			else
 				animation.play(character + "-right", true);
-		} else {
-			//no spooky nor girlfriend so we do da normal animation
+		}
+		else if (character == '')
+		{
+			// Don't try to play an animation on an invisible character.
+			return;
+		}
+		else
+		{
+			// no spooky nor girlfriend so we do da normal animation
 			if (animation.name == "bfConfirm")
 				return;
 			animation.play(character, true);
 		}
-		if (LastFrame) {
+		if (LastFrame)
+		{
 			animation.finish();
 		}
 	}
