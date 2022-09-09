@@ -11,8 +11,6 @@ class CoolUtil
 {
 	public static var difficultyArray:Array<String> = ['Easy', "Normal", "Hard"];
 
-	public static var suffixDiffsArray:Array<String> = ['-easy', "", "-hard"];
-
 	public static var daPixelZoom:Float = 6;
 
 	public static function difficultyFromInt(difficulty:Int):String
@@ -24,20 +22,16 @@ class CoolUtil
 	{
 		var daList:Array<String>;
 
-		try
-		{
-			daList = OpenFlAssets.getText(path).trim().split('\n');
-		}
-		catch (e)
-		{
-			daList = null;
-		}
+		#if FEATURE_FILESYSTEM
+		daList = File.getContent(path).trim().split('\n');
+		#else
+		daList = OpenFlAssets.getText(path).trim().split('\n');
+		#end
 
-		if (daList != null)
-			for (i in 0...daList.length)
-			{
-				daList[i] = daList[i].trim();
-			}
+		for (i in 0...daList.length)
+		{
+			daList[i] = daList[i].trim();
+		}
 
 		return daList;
 	}

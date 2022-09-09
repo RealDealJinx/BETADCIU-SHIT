@@ -15,8 +15,6 @@ class KadeEngineData
 		if (FlxG.save.data.downscroll == null)
 			FlxG.save.data.downscroll = false;
 
-		if (FlxG.save.data.autoSaveChart == null)
-			FlxG.save.data.autoSaveChart = false;
 		if (FlxG.save.data.hitSound == null)
 			FlxG.save.data.hitSound = 0;
 
@@ -133,7 +131,7 @@ class KadeEngineData
 			FlxG.save.data.optimize = false;
 
 		if (FlxG.save.data.discordMode == null)
-			FlxG.save.data.discordMode = 1;
+			FlxG.save.data.discordMode = 2;
 
 		if (FlxG.save.data.roundAccuracy == null)
 			FlxG.save.data.roundAccuracy = false;
@@ -255,8 +253,7 @@ class KadeEngineData
 		PlayerSettings.player1.controls.loadKeyBinds();
 		KeyBinds.keyCheck();
 
-		if (FlxG.save.data.watermark == null)
-			FlxG.save.data.watermark = true;
+		Main.watermarks = FlxG.save.data.watermark;
 
 		(cast(Lib.current.getChildAt(0), Main)).setFPSCap(FlxG.save.data.fpsCap);
 	}

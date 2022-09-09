@@ -27,10 +27,6 @@ import flixel.FlxCamera;
 import flixel.FlxG;
 import openfl.Lib;
 import Shaders;
-import openfl.utils.Assets as OpenFlAssets;
-#if FEATURE_FILESYSTEM
-import sys.io.File;
-#end
 
 using StringTools;
 
@@ -433,16 +429,14 @@ class ModchartState
 				songLowercase = 'milf';
 		}
 
-		var path = OpenFlAssets.getText(Paths.lua('songs/${PlayState.SONG.songId}/modchart'));
+		var path = Paths.lua('songs/${PlayState.SONG.songId}/modchart');
 		if (PlayState.isSM)
-			path = File.getContent(PlayState.pathToSm + "/modchart.lua");
+			path = PlayState.pathToSm + "/modchart.lua";
 
-		var result = LuaL.dostring(lua, path); // execute le file
+		var result = LuaL.dofile(lua, path); // execute le file
 
 		if (result != 0)
 		{
-			if (FlxG.fullscreen)
-				FlxG.fullscreen = !FlxG.fullscreen;
 			Application.current.window.alert("LUA COMPILE ERROR:\n" + Lua.tostring(lua, result), "Kade Engine Modcharts");
 			MusicBeatState.switchState(new FreeplayState());
 			PlayState.instance.clean();
@@ -502,11 +496,6 @@ class ModchartState
 		Lua_helper.add_callback(lua, "makeSprite", makeLuaSprite);
 
 		// sprites
-
-		Lua_helper.add_callback(lua, "initBackgroundOverlayVideo", function(vidPath:String, type:String, layInFront:Bool)
-		{
-			PlayState.instance.backgroundOverlayVideo(vidPath, type, layInFront);
-		});
 
 		Lua_helper.add_callback(lua, "setNoteWiggle", function(wiggleId)
 		{
@@ -580,6 +569,49 @@ class ModchartState
 		Lua_helper.add_callback(lua, "setHudZoom", function(zoomAmount:Float)
 		{
 			PlayState.instance.camHUD.zoom = zoomAmount;
+		});
+
+		Lua_helper.add_callback(lua, "initBackgroundVideo", function(videoName:String)
+		{
+			trace('playing assets/videos/' + videoName + '.webm');
+			PlayState.instance.backgroundVideo("assets/videos/" + videoName + ".webm");
+		});
+
+		Lua_helper.add_callback(lua, "pauseVideo", function()
+		{
+			if (!BackgroundVideo.get().paused)
+				BackgroundVideo.get().pause();
+		});
+
+		Lua_helper.add_callback(lua, "resumeVideo", function()
+		{
+			if (BackgroundVideo.get().paused)
+				BackgroundVideo.get().pause();
+		});
+
+		Lua_helper.add_callback(lua, "restartVideo", function()
+		{
+			BackgroundVideo.get().restart();
+		});
+
+		Lua_helper.add_callback(lua, "getVideoSpriteX", function()
+		{
+			return PlayState.instance.videoSprite.x;
+		});
+
+		Lua_helper.add_callback(lua, "getVideoSpriteY", function()
+		{
+			return PlayState.instance.videoSprite.y;
+		});
+
+		Lua_helper.add_callback(lua, "setVideoSpritePos", function(x:Int, y:Int)
+		{
+			PlayState.instance.videoSprite.setPosition(x, y);
+		});
+
+		Lua_helper.add_callback(lua, "setVideoSpriteScale", function(scale:Float)
+		{
+			PlayState.instance.videoSprite.setGraphicSize(Std.int(PlayState.instance.videoSprite.width * scale));
 		});
 
 		Lua_helper.add_callback(lua, "setLaneUnderLayPos", function(value:Int)

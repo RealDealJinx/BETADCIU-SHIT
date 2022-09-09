@@ -53,6 +53,16 @@ class StoryMenuState extends MusicBeatState
 		['tankman', 'bf', 'gf']
 	];
 
+	var weekDiffs:Array<Dynamic> = [
+		['easy', 'normal', 'hard'],
+		['easy', 'normal', 'hard'],
+		['easy', 'normal', 'hard'],
+		['easy', 'normal', 'hard'],
+		['easy', 'normal', 'hard'],
+		['easy', 'normal', 'hard'],
+		['easy', 'normal', 'hard']
+	];
+
 	var weekNames:Array<String> = CoolUtil.coolTextFile(Paths.txt('data/weekNames'));
 
 	var diffList:Array<String> = [];
@@ -157,7 +167,6 @@ class StoryMenuState extends MusicBeatState
 			if (!FlxG.sound.music.playing)
 			{
 				FlxG.sound.playMusic(Paths.music(FlxG.save.data.watermark ? "ke_freakyMenu" : "freakyMenu"));
-				MainMenuState.freakyPlaying = true;
 				Conductor.changeBPM(102);
 			}
 		}
@@ -407,6 +416,7 @@ class StoryMenuState extends MusicBeatState
 			FlxG.sound.play(Paths.sound('cancelMenu'));
 			movedBack = true;
 			MusicBeatState.switchState(new MainMenuState());
+			clean();
 		}
 
 		if (FlxG.sound.music != null)
@@ -455,7 +465,25 @@ class StoryMenuState extends MusicBeatState
 			PlayState.campaignAccuracy = 0;
 			new FlxTimer().start(1, function(tmr:FlxTimer)
 			{
+				#if !FEATURE_MP4VIDEOS
+				if (FlxG.save.data.optimize || !FlxG.save.data.background)
+				{
+					switch (curWeek)
+					{
+						case 7:
+							LoadingState.loadAndSwitchState(new VideoState('cutscenes/ugh_cutscene', new PlayState()), true);
+
+						default:
+							LoadingState.loadAndSwitchState(new PlayState(), true);
+					}
+				}
+				else
+				{
+					LoadingState.loadAndSwitchState(new PlayState(), true);
+				}
+				#else
 				LoadingState.loadAndSwitchState(new PlayState(), true);
+				#end
 			});
 		}
 	}

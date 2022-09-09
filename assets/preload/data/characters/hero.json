@@ -1,20 +1,20 @@
 {
-  "name": "Hero",
-  "asset": "characters/DADDY_DEAREST",
-  "barColor": "#AF66CE",
+  "name": "hero",
+  "asset": "characters/Herobrine",
+  "barColor": "#006464",
   "startingAnim": "idle",
   "holdLength": 6.1,
-  "camPos": [400, 0],
+  "camPos": [0, 0],
   "animations": [
     {
       "name": "idle",
-      "prefix": "Dad idle dance",
+      "prefix": "idle",
       "nextAnim": "idleLoop",
       "offsets": [0, 0]
     },
     {
       "name": "idleLoop",
-      "prefix": "Dad idle dance",
+      "prefix": "idle",
       "offsets": [0, 0],
       "frameIndices": [11, 12],
       "frameRate": 12,
@@ -22,23 +22,23 @@
     },
     {
       "name": "singUP",
-      "prefix": "Dad Sing Note UP",
-      "offsets": [-6, 50]
+      "prefix": "up",
+      "offsets": [0, 0]
     },
     {
       "name": "singLEFT",
-      "prefix": "Dad Sing Note LEFT",
-      "offsets": [-10, 10]
+      "prefix": "left",
+      "offsets": [0, 0]
     },
     {
       "name": "singRIGHT",
-      "prefix": "Dad Sing Note RIGHT",
-      "offsets": [0, 27]
+      "prefix": "right",
+      "offsets": [0, 0]
     },
     {
       "name": "singDOWN",
-      "prefix": "Dad Sing Note DOWN",
-      "offsets": [0, -30]
+      "prefix": "down",
+      "offsets": [0, 0]
     }
   ]
 }

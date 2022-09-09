@@ -4,11 +4,22 @@ import openfl.Lib;
 
 class GlobalVideo
 {
+	private static var video:VideoHandler;
 	private static var webm:WebmHandler;
 	public static var isWebm:Bool = false;
 	public static var isAndroid:Bool = false;
 	public static var daAlpha1:Float = 0.2;
 	public static var daAlpha2:Float = 1;
+
+	public static function setVid(vid:VideoHandler):Void
+	{
+		video = vid;
+	}
+
+	public static function getVid():VideoHandler
+	{
+		return video;
+	}
 
 	public static function setWebm(vid:WebmHandler):Void
 	{
@@ -23,7 +34,14 @@ class GlobalVideo
 
 	public static function get():Dynamic
 	{
-		return getWebm();
+		if (isWebm)
+		{
+			return getWebm();
+		}
+		else
+		{
+			return getVid();
+		}
 	}
 
 	public static function calc(ind:Int):Dynamic
@@ -31,8 +49,8 @@ class GlobalVideo
 		var stageWidth:Int = Lib.current.stage.stageWidth;
 		var stageHeight:Int = Lib.current.stage.stageHeight;
 
-		var width:Float = 1280;
-		var height:Float = 720;
+		var width:Float = GameDimensions.width;
+		var height:Float = GameDimensions.height;
 
 		// trace("AH: " + stageWidth);
 		// trace(width);

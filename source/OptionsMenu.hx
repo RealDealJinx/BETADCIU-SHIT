@@ -193,7 +193,6 @@ class OptionsMenu extends FlxSubState
 			new OptionCata(50, 104, "Saves", [
 				#if desktop // new ReplayOption("View saved song replays."),
 				#end
-				new AutoSaveChart("Toggle if in 5mins within chart it autosaves."),
 				new ResetModifiersOption("Reset your Gameplay modifiers. This is irreversible!"),
 				new ResetScoreOption("Reset your score on all songs and weeks. This is irreversible!"),
 				new LockWeeksOption("Reset your story mode progress. This is irreversible!"),
@@ -397,6 +396,7 @@ class OptionsMenu extends FlxSubState
 		var any = false;
 		var escape = false;
 		var clickedCat = false;
+		var clickedOpt = false;
 
 		changedOption = false;
 
@@ -571,17 +571,19 @@ class OptionsMenu extends FlxSubState
 
 						if (selectedOptionIndex > options[selectedCatIndex].options.length - 1)
 						{
-								for (i in 0...selectedCat.options.length)
-								{
-									var opt = selectedCat.optionObjects.members[i];
-									opt.y = options[4].titleObject.y + 54 + (46 * i);
-								}
-								selectedOptionIndex = 0;
+							for (i in 0...selectedCat.options.length)
+							{
+								var opt = selectedCat.optionObjects.members[i];
+								opt.y = options[4].titleObject.y + 54 + (46 * i);
+							}
+							selectedOptionIndex = 0;
 						}
-	
-						if (selectedOptionIndex != 0 && options[selectedCatIndex].options.length > 6)
+
+						if (selectedOptionIndex != 0
+							&& selectedOptionIndex != options[selectedCatIndex].options.length - 1
+							&& options[selectedCatIndex].options.length > 6)
 						{
-							if (selectedOptionIndex >= (options[selectedCatIndex].options.length - 1) / (2+options[selectedCatIndex].options.length*0.1))
+							if (selectedOptionIndex >= (options[selectedCatIndex].options.length - 1) / 2)
 								for (i in selectedCat.optionObjects.members)
 								{
 									i.y -= 46;
@@ -603,25 +605,24 @@ class OptionsMenu extends FlxSubState
 						if (selectedOptionIndex < 0)
 						{
 							selectedOptionIndex = options[selectedCatIndex].options.length - 1;
-							if (options[selectedCatIndex].options.length > 6){
-								for (i in 0...selectedCat.options.length)
+
+							if (options[selectedCatIndex].options.length > 6)
+								for (i in selectedCat.optionObjects.members)
 								{
-									var opt = selectedCat.optionObjects.members[i];
-									opt.y = options[4].titleObject.y + 54 -(options[selectedCatIndex].options.length*(16+options[selectedCatIndex].options.length)) + (46 * i);
+									i.y -= (46 * ((options[selectedCatIndex].options.length - 1) / 2));
 								}
-							}
 						}
-	
+
 						if (selectedOptionIndex != 0 && options[selectedCatIndex].options.length > 6)
 						{
-							if (selectedOptionIndex >= (options[selectedCatIndex].options.length - 1) / (2+options[selectedCatIndex].options.length*0.1))
+							if (selectedOptionIndex >= (options[selectedCatIndex].options.length - 1) / 2)
 								for (i in selectedCat.optionObjects.members)
 								{
 									i.y += 46;
 								}
 						}
-	
-						if (selectedOptionIndex < (options[selectedCatIndex].options.length - 1) / (2+options[selectedCatIndex].options.length*0.1))
+
+						if (selectedOptionIndex < (options[selectedCatIndex].options.length - 1) / 2)
 						{
 							for (i in 0...selectedCat.options.length)
 							{

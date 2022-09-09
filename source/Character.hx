@@ -99,69 +99,64 @@ class Character extends FlxSprite
 		}
 
 		var data:CharacterData = cast jsonData;
+		var tex:FlxFramesCollection;
 
-		if (!FlxG.save.data.optimize)
-		{
-			var tex:FlxFramesCollection;
+		if (data.AtlasType == 'PackerAtlas')
+			tex = Paths.getPackerAtlas(data.asset, 'shared');
+		else if (data.AtlasType == 'TextureAtlas')
+			tex = Paths.getTextureAtlas(data.asset, 'shared');
+		else
+			tex = Paths.getSparrowAtlas(data.asset, 'shared');
 
-			if (data.AtlasType == 'PackerAtlas')
-				tex = Paths.getPackerAtlas(data.asset, 'shared');
-			else if (data.AtlasType == 'TextureAtlas')
-				tex = Paths.getTextureAtlas(data.asset, 'shared');
-			else
-				tex = Paths.getSparrowAtlas(data.asset, 'shared');
+		frames = tex;
+		if (frames != null)
+			for (anim in data.animations)
+			{
+				var frameRate = anim.frameRate == null ? 24 : anim.frameRate;
+				var looped = anim.looped == null ? false : anim.looped;
+				var flipX = anim.flipX == null ? false : anim.flipX;
+				var flipY = anim.flipY == null ? false : anim.flipY;
 
-			frames = tex;
-			if (frames != null)
-				for (anim in data.animations)
+				if (anim.frameIndices != null)
 				{
-					var frameRate = anim.frameRate == null ? 24 : anim.frameRate;
-					var looped = anim.looped == null ? false : anim.looped;
-					var flipX = anim.flipX == null ? false : anim.flipX;
-					var flipY = anim.flipY == null ? false : anim.flipY;
-
-					if (anim.frameIndices != null)
-					{
-						animation.addByIndices(anim.name, anim.prefix, anim.frameIndices, "", Std.int(frameRate * PlayState.songMultiplier), looped, flipX,
-							flipY);
-					}
-					else
-					{
-						animation.addByPrefix(anim.name, anim.prefix, Std.int(frameRate * PlayState.songMultiplier), looped, flipX, flipY);
-					}
-
-					animOffsets[anim.name] = anim.offsets == null ? [0, 0] : anim.offsets;
-					animInterrupt[anim.name] = anim.interrupt == null ? true : anim.interrupt;
-
-					if (data.isDancing && anim.isDanced != null)
-						animDanced[anim.name] = anim.isDanced;
-
-					if (anim.nextAnim != null)
-						animNext[anim.name] = anim.nextAnim;
+					animation.addByIndices(anim.name, anim.prefix, anim.frameIndices, "", Std.int(frameRate * PlayState.songMultiplier), looped, flipX, flipY);
+				}
+				else
+				{
+					animation.addByPrefix(anim.name, anim.prefix, Std.int(frameRate * PlayState.songMultiplier), looped, flipX, flipY);
 				}
 
-			this.replacesGF = data.replacesGF == null ? false : data.replacesGF;
-			this.hasTrail = data.hasTrail == null ? false : data.hasTrail;
-			this.isDancing = data.isDancing == null ? false : data.isDancing;
-			this.charPos = data.charPos == null ? [0, 0] : data.charPos;
-			this.camPos = data.camPos == null ? [0, 0] : data.camPos;
-			this.camFollow = data.camFollow == null ? [0, 0] : data.camFollow;
-			this.holdLength = data.holdLength == null ? 4 : data.holdLength;
+				animOffsets[anim.name] = anim.offsets == null ? [0, 0] : anim.offsets;
+				animInterrupt[anim.name] = anim.interrupt == null ? true : anim.interrupt;
 
-			flipX = data.flipX == null ? false : data.flipX;
+				if (data.isDancing && anim.isDanced != null)
+					animDanced[anim.name] = anim.isDanced;
 
-			if (data.scale != null)
-			{
-				setGraphicSize(Std.int(width * data.scale));
-				updateHitbox();
+				if (anim.nextAnim != null)
+					animNext[anim.name] = anim.nextAnim;
 			}
 
-			antialiasing = data.antialiasing == null ? FlxG.save.data.antialiasing : data.antialiasing;
+		this.replacesGF = data.replacesGF == null ? false : data.replacesGF;
+		this.hasTrail = data.hasTrail == null ? false : data.hasTrail;
+		this.isDancing = data.isDancing == null ? false : data.isDancing;
+		this.charPos = data.charPos == null ? [0, 0] : data.charPos;
+		this.camPos = data.camPos == null ? [0, 0] : data.camPos;
+		this.camFollow = data.camFollow == null ? [0, 0] : data.camFollow;
+		this.holdLength = data.holdLength == null ? 4 : data.holdLength;
 
-			playAnim(data.startingAnim);
+		flipX = data.flipX == null ? false : data.flipX;
+
+		if (data.scale != null)
+		{
+			setGraphicSize(Std.int(width * data.scale));
+			updateHitbox();
 		}
 
+		antialiasing = data.antialiasing == null ? FlxG.save.data.antialiasing : data.antialiasing;
+
 		barColor = FlxColor.fromString(data.barColor);
+
+		playAnim(data.startingAnim);
 	}
 
 	override function update(elapsed:Float)
@@ -170,33 +165,20 @@ class Character extends FlxSprite
 		{
 			if (!isPlayer)
 			{
-				if (!PlayStateChangeables.opponentMode)
+				if (animation.curAnim.name.startsWith('sing'))
 				{
-					if (animation.curAnim.name.startsWith('sing'))
-					{
-						holdTimer += elapsed;
-					}
-
-					if (holdTimer >= Conductor.stepCrochet * 0.0011 * holdLength * PlayState.songMultiplier)
-					{
-						dance();
-
-						holdTimer = 0;
-					}
+					holdTimer += elapsed;
 				}
-				else
+
+				if (holdTimer >= Conductor.stepCrochet * 0.0011 * holdLength * PlayState.songMultiplier)
 				{
-					if (animation.curAnim.name.startsWith('sing'))
-						holdTimer += elapsed;
-					else
-						holdTimer = 0;
-
-					if (animation.curAnim.name.endsWith('miss') && animation.curAnim.finished && !debugMode)
+					if (!PlayStateChangeables.opponentMode)
 						dance();
-
-					if (animation.curAnim.name == 'firstDeath' && animation.curAnim.finished)
-						playAnim('deathLoop');
+					holdTimer = 0;
 				}
+
+				if (animation.curAnim.name.endsWith('miss') && animation.curAnim.finished && !debugMode)
+					playAnim('idle', true, false, 10);
 			}
 
 			if (!debugMode)
@@ -328,7 +310,7 @@ class Character extends FlxSprite
 		{
 			for (songNotes in section.sectionNotes)
 			{
-				var daStrumTime:Float = (songNotes[0] - FlxG.save.data.offset - PlayState.SONG.offset) / PlayState.songMultiplier;
+				var daStrumTime:Float = (songNotes[0] - FlxG.save.data.offset - PlayState.songOffset) / PlayState.songMultiplier;
 				if (daStrumTime < 0)
 					daStrumTime = 0;
 

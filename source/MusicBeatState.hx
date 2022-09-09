@@ -2,20 +2,24 @@ package;
 
 import Conductor.BPMChangeEvent;
 import flixel.FlxBasic;
+import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.addons.transition.FlxTransitionableState;
+import GlobalUIState;
+import flixel.math.FlxMath;
+import flixel.text.FlxText;
+import flixel.util.FlxColor;
 import lime.app.Application;
 import openfl.Lib;
 import flixel.addons.ui.FlxUI;
 import flixel.FlxSprite;
-import flixel.group.FlxGroup.FlxTypedGroup;
-import flixel.addons.ui.FlxUIState;
+import openfl.system.System;
 #if FEATURE_DISCORD
 import Discord.DiscordClient;
 #end
 
-class MusicBeatState extends FlxUIState
+class MusicBeatState extends GlobalUIState
 {
 	private var lastBeat:Float = 0;
 	private var lastStep:Float = 0;
@@ -37,39 +41,10 @@ class MusicBeatState extends FlxUIState
 
 	override function destroy()
 	{
-		clean();
-
 		Application.current.window.onFocusIn.remove(onWindowFocusOut);
 		Application.current.window.onFocusIn.remove(onWindowFocusIn);
 
 		super.destroy();
-	}
-
-	public function destroyObject(Object:Dynamic):Void
-	{
-		if (Std.isOfType(Object, FlxSprite))
-		{
-			var spr:FlxSprite = cast(Object, FlxSprite);
-			spr.kill();
-			remove(spr, true);
-			spr.destroy();
-			spr = null;
-		}
-		else if (Std.isOfType(Object, FlxTypedGroup))
-		{
-			var grp:FlxTypedGroup<Dynamic> = cast(Object, FlxTypedGroup<Dynamic>);
-			for (ObjectGroup in grp.members)
-			{
-				if (Std.isOfType(ObjectGroup, FlxSprite))
-				{
-					var spr:FlxSprite = cast(ObjectGroup, FlxSprite);
-					spr.kill();
-					remove(spr, true);
-					spr.destroy();
-					spr = null;
-				}
-			}
-		}
 	}
 
 	override function add(Object:FlxBasic):FlxBasic
@@ -103,17 +78,20 @@ class MusicBeatState extends FlxUIState
 
 	public function clean()
 	{
-		#if FEATURE_MULTITHREADING
-		for (i in MasterObjectLoader.Objects)
+		if (FlxG.save.data.optimize)
 		{
-			destroyObject(i);
+			#if FEATURE_MULTITHREADING
+			for (i in MasterObjectLoader.Objects)
+			{
+				remove(i);
+			}
+			#else
+			for (i in assets)
+			{
+				remove(i);
+			}
+			#end
 		}
-		#else
-		for (i in assets)
-		{
-			remove(i);
-		}
-		#end
 	}
 
 	override function create()

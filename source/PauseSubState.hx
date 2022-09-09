@@ -36,7 +36,7 @@ class PauseSubState extends MusicBeatSubstate
 	var perSongOffset:FlxText;
 
 	var offsetChanged:Bool = false;
-	var startOffset:Float = PlayState.SONG.offset;
+	var startOffset:Float = PlayState.songOffset;
 
 	var bg:FlxSprite;
 
@@ -48,14 +48,13 @@ class PauseSubState extends MusicBeatSubstate
 		"Dead engine? (-Bolo)",
 		"Amber best Pyro bow user fuck you! (-Bolo)",
 		"I love watching Yosuga No Sora with my sister. (-Bolo)", // Wtf 💀
-		"God i love futabu!! so fucking much (-McChomk)", // God died in vain 💀
 		"Lag issues? Don't worry we are currently mining cryptocurrencies with ur pc :D (-Bolo)",
 		"Are you really reading this thing? (-Bolo)",
 		"I fced Sex mod with only one hand! (-Bolo)",
 		"EPIC EMBED FAIL (-Bolo)",
 		"Don't take these dialogues seriously lol (-Bolo)",
 		"Fireable actually used my fork. Pog (-Bolo)",
-		"I'm not gay, I'm default :trollface: (-Bolo)", // homhopobic 😭
+		"I'm not gay, I'm default :trollface: (-Bolo)",
 		"0.01% batch (-PopCat)",
 		"Are you have the stupid? (-BombasticTom)",
 		"I am here (-Faid)",
@@ -65,14 +64,19 @@ class PauseSubState extends MusicBeatSubstate
 		"Ur black in real life or ur black in discord theme (-Bolo)",
 		"I'm not longer a minor :( (-Bolo)",
 		"We are gonna be using your fork as a base for myth engine (-Awoofle)",
-		"Cool ass looking shit. Imma go steal ur code and give u credit (-BeastlyGhost)",
-		"Camellia's 2.5 fork poggers. (-Bolo)"
+		"Cool ass looking shit. Imma go steal ur code and give u credit (-BeastlyGhost)"
 	];
 
 	public function new()
 	{
 		Paths.clearUnusedMemory();
 		super();
+
+		if (PlayState.instance.useVideo)
+		{
+			if (BackgroundVideo.get().playing)
+				BackgroundVideo.get().pause();
+		}
 
 		if (FlxG.sound.music.playing)
 			FlxG.sound.music.pause();
@@ -108,7 +112,7 @@ class PauseSubState extends MusicBeatSubstate
 		add(bg);
 
 		var levelInfo:FlxText = new FlxText(20, 15, 0, "", 32);
-		levelInfo.text += PlayState.SONG.songName.toUpperCase();
+		levelInfo.text += PlayState.instance.songFixedName.toUpperCase();
 		levelInfo.scrollFactor.set();
 		levelInfo.setFormat(Paths.font("vcr.ttf"), 32);
 		levelInfo.updateHitbox();
@@ -230,6 +234,12 @@ class PauseSubState extends MusicBeatSubstate
 					PlayState.instance.scrollSpeed = (FlxG.save.data.scrollSpeed == 1 ? PlayState.SONG.speed * PlayState.songMultiplier : FlxG.save.data.scrollSpeed * PlayState.songMultiplier);
 				case "Restart Song":
 					PlayState.startTime = 0;
+					if (PlayState.instance.useVideo)
+					{
+						BackgroundVideo.get().stop();
+						PlayState.instance.remove(PlayState.instance.videoSprite);
+						PlayState.instance.removedVideo = true;
+					}
 					MusicBeatState.switchState(new PlayState());
 					PlayState.stageTesting = false;
 				case "Options":
@@ -237,6 +247,12 @@ class PauseSubState extends MusicBeatSubstate
 					close();
 				case "Exit to menu":
 					PlayState.startTime = 0;
+					if (PlayState.instance.useVideo)
+					{
+						BackgroundVideo.get().stop();
+						PlayState.instance.remove(PlayState.instance.videoSprite);
+						PlayState.instance.removedVideo = true;
+					}
 					if (PlayState.loadRep)
 					{
 						FlxG.save.data.botplay = false;
@@ -254,6 +270,8 @@ class PauseSubState extends MusicBeatSubstate
 					#end
 					if (FlxG.save.data.fpsCap > 300)
 						(cast(Lib.current.getChildAt(0), Main)).setFPSCap(300);
+
+					PlayState.instance.clean();
 
 					if (PlayState.isStoryMode)
 					{
