@@ -1,0 +1,46 @@
+{
+  "name": "lordx",
+  "asset": "characters/x",
+  "barColor": "#7877B0",
+  "startingAnim": "idle",
+  "holdLength": 4,
+  "scale": 2,
+  "flipX": true,
+  "camPos": [-1320, -1210],
+  "animations": [
+    {
+      "name": "idle",
+      "prefix": "Idle instance 1",
+      "nextAnim": "idleLoop",
+      "offsets": [825, 1090]
+    },
+    {
+      "name": "idleLoop",
+      "prefix": "Idle instance 1",
+      "offsets": [825, 1090],
+      "frameIndices": [11, 12],
+      "frameRate": 12,
+      "looped": true
+    },
+    {
+      "name": "singUP",
+      "prefix": "Up instance 1",
+      "offsets": [819, 1413]
+    },
+    {
+      "name": "singLEFT",
+      "prefix": "Right instance 1",
+      "offsets": [1005, 1223]
+    },
+    {
+      "name": "singRIGHT",
+      "prefix": "Left instance 1",
+      "offsets": [1298, 1115]
+    },
+    {
+      "name": "singDOWN",
+      "prefix": "Down instance 1",
+      "offsets": [1290, 1420]
+    }
+  ]
+}

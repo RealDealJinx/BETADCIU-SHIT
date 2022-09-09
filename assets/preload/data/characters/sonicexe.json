@@ -1,0 +1,36 @@
+{
+  "name": "sonicexe",
+  "asset": "characters/sonicexe",
+  "barColor": "#00558E",
+  "startingAnim": "idle",
+  "holdLength": 4,
+  "camPos": [-10, 110],
+  "animations": [
+    {
+      "name": "idle",
+      "prefix": "idle",
+      "nextAnim": "SONICmoveIDLE",
+      "offsets": [-60, -80]
+    },
+    {
+      "name": "singUP",
+      "prefix": "SONICmoveUP",
+      "offsets": [34, 31]
+    },
+    {
+      "name": "singLEFT",
+      "prefix": "SONICmoveLEFT",
+      "offsets": [110, -63]
+    },
+    {
+      "name": "singRIGHT",
+      "prefix": "SONICmoveRIGHT",
+      "offsets": [-90, -16]
+    },
+    {
+      "name": "singDOWN",
+      "prefix": "SONICmoveDOWN",
+      "offsets": [20, -160]
+    }
+  ]
+}
